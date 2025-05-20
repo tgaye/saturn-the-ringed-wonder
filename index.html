@@ -1,0 +1,683 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saturn: The Ringed Wonder</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.8.0/lib/p5.js"></script>
+    <style>
+        :root {
+            --space-blue: #0a0e2a;
+            --star-white: #e6f1ff;
+            --saturn-gold: #d4af37;
+            --ring-silver: #c0c0c0;
+            --highlight-blue: #4fc3f7;
+            --moon-gray: #aaaaaa;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--space-blue);
+            color: var(--star-white);
+            font-family: 'Orbitron', 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        @font-face {
+            font-family: 'Orbitron';
+            src: url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        }
+        
+        header {
+            text-align: center;
+            padding: 2rem 0;
+            background: linear-gradient(to bottom, #000000, var(--space-blue));
+            border-bottom: 1px solid var(--highlight-blue);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(to right, var(--highlight-blue), var(--saturn-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+        }
+        
+        h2 {
+            color: var(--highlight-blue);
+            border-bottom: 1px solid var(--highlight-blue);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        #hero {
+            position: relative;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(10, 14, 42, 0.7);
+            border-radius: 10px;
+            border: 1px solid var(--highlight-blue);
+            backdrop-filter: blur(5px);
+        }
+        
+        .content-section {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .card {
+            background: rgba(20, 25, 60, 0.7);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--highlight-blue);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(79, 195, 247, 0.2);
+        }
+        
+        .card h3 {
+            color: var(--saturn-gold);
+            margin-top: 0;
+        }
+        
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 14, 42, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--highlight-blue);
+            z-index: 100;
+            max-width: 300px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--highlight-blue);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin-right: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        button:hover {
+            background: #444;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        
+        .slider-container span {
+            width: 40px;
+            text-align: right;
+            font-size: 12px;
+        }
+        
+        #toggle-controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 101;
+            background: var(--highlight-blue);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(to top, #000000, var(--space-blue));
+            border-top: 1px solid var(--highlight-blue);
+            font-size: 0.9rem;
+        }
+        
+        .fact-box {
+            background: rgba(79, 195, 247, 0.1);
+            border-left: 4px solid var(--highlight-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            #controls {
+                max-width: 250px;
+                font-size: 0.9rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="icon" type="image/png" href="http://localhost:3001/output_images/maw25a95-2c4onv3f/favicon-saturn-icon_32x32.png">
+
+<base target="_self">
+</head>
+<body>
+    <header>
+        <h1>Saturn: The Ringed Wonder</h1>
+        <p>Explore the majestic gas giant of our solar system</p>
+    </header>
+    
+    <section id="hero">
+        <div id="canvas-container"></div>
+        <div class="hero-content">
+            <h2>Interactive Saturn System</h2>
+            <p>Rotate, zoom, and explore Saturn's rings and moons in this 3D visualization</p>
+        </div>
+    </section>
+    
+    <button id="toggle-controls">☰ Controls</button>
+    <div id="controls">
+        <div class="control-group">
+            <h3>View Controls</h3>
+            <div class="slider-container">
+                <label for="rotation-speed">Rotation Speed</label>
+                <input type="range" id="rotation-speed" min="0" max="0.02" step="0.001" value="0.005">
+                <span id="rotation-speed-value">0.005</span>
+            </div>
+            <div class="slider-container">
+                <label for="zoom">Zoom</label>
+                <input type="range" id="zoom" min="100" max="500" step="10" value="300">
+                <span id="zoom-value">300</span>
+            </div>
+            <div class="slider-container">
+                <label for="tilt">Tilt</label>
+                <input type="range" id="tilt" min="-45" max="45" step="1" value="27">
+                <span id="tilt-value">27°</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>Lighting</h3>
+            <div class="slider-container">
+                <label for="light-intensity">Intensity</label>
+                <input type="range" id="light-intensity" min="50" max="200" step="5" value="100">
+                <span id="light-intensity-value">100</span>
+            </div>
+            <div class="slider-container">
+                <label for="ambient-light">Ambient</label>
+                <input type="range" id="ambient-light" min="0" max="100" step="5" value="30">
+                <span id="ambient-light-value">30</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>Features</h3>
+            <label>
+                <input type="checkbox" id="show-rings" checked=""> Show Rings
+            </label>
+            <label>
+                <input type="checkbox" id="show-moons" checked=""> Show Moons
+            </label>
+            <label>
+                <input type="checkbox" id="show-clouds" checked=""> Show Clouds
+            </label>
+        </div>
+        <div class="control-group">
+            <h3>Actions</h3>
+            <button id="reset">Reset</button>
+            <button id="randomize">Randomize</button>
+            <button id="pause">Pause</button>
+        </div>
+    </div>
+    
+    <section class="content-section">
+        <h2>About Saturn</h2>
+        <p>Saturn is the sixth planet from the Sun and the second-largest in our solar system. Known for its spectacular ring system, Saturn is a gas giant composed mostly of hydrogen and helium.</p>
+        
+        <div class="fact-box">
+            <p><strong>Fun Fact:</strong> Saturn is the least dense planet in our solar system. With a density of 0.687 g/cm³, it would float if you could find a bathtub big enough!</p>
+        </div>
+        
+        <div class="card-grid">
+            <div class="card">
+                <h3>Basic Characteristics</h3>
+                <ul>
+                    <li><strong>Type:</strong> Gas giant</li>
+                    <li><strong>Diameter:</strong> 116,460 km (9.5× Earth)</li>
+                    <li><strong>Mass:</strong> 95 Earth masses</li>
+                    <li><strong>Orbital Period:</strong> 29.4 Earth years</li>
+                    <li><strong>Rotation Period:</strong> 10.7 hours</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Atmosphere &amp; Weather</h3>
+                <ul>
+                    <li>Alternating cloud bands from jet streams</li>
+                    <li>Hexagonal storm at north pole</li>
+                    <li>Great White Spot megastorms every ~30 years</li>
+                    <li>Wind speeds up to 1,800 km/h</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Ring System</h3>
+                <ul>
+                    <li>Composed mostly of water ice</li>
+                    <li>Seven main rings (A-G)</li>
+                    <li>Cassini Division gap between A and B rings</li>
+                    <li>Only 10-100 meters thick</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section">
+        <h2>Notable Moons</h2>
+        <p>Saturn has at least 146 confirmed moons, each with unique characteristics. Here are some of the most fascinating:</p>
+        
+        <div class="card-grid">
+            <div class="card">
+                <h3>Titan</h3>
+                <ul>
+                    <li>Larger than Mercury</li>
+                    <li>Only moon with a dense atmosphere</li>
+                    <li>Methane lakes and rivers</li>
+                    <li>Potential for prebiotic chemistry</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Enceladus</h3>
+                <ul>
+                    <li>Icy surface with geysers</li>
+                    <li>Subsurface ocean of liquid water</li>
+                    <li>Potential hydrothermal activity</li>
+                    <li>Possible habitat for microbial life</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Rhea</h3>
+                <ul>
+                    <li>Second-largest moon of Saturn</li>
+                    <li>Heavily cratered surface</li>
+                    <li>Possible ring system of its own</li>
+                    <li>Composed mostly of water ice</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section">
+        <h2>Exploration</h2>
+        <p>Humanity's exploration of Saturn has revealed many of its secrets:</p>
+        
+        <div class="card-grid">
+            <div class="card">
+                <h3>Pioneer 11 (1979)</h3>
+                <p>First spacecraft to fly by Saturn, discovering new moons and confirming the F ring.</p>
+            </div>
+            <div class="card">
+                <h3>Voyager Missions (1980-81)</h3>
+                <p>Provided detailed images of Saturn's rings and atmosphere, discovering complex ring structures.</p>
+            </div>
+            <div class="card">
+                <h3>Cassini-Huygens (2004-2017)</h3>
+                <p>Orbited Saturn for 13 years, sending the Huygens probe to Titan's surface and making numerous discoveries about Saturn's moons and rings.</p>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <p>© 2025 Saturn Exploration Project</p>
+        <p>Educational resource about our solar system's ringed wonder</p>
+    </footer>
+
+    <script>
+        const sketch = (p) => {
+            // System parameters
+            let saturnRadius = 50;
+            let ringInnerRadius = 60;
+            let ringOuterRadius = 110;
+            let moonCount = 5;
+            let moons = [];
+            let rotationAngle = 0;
+            let rotationSpeed = 0.005;
+            let zoom = 300;
+            let tilt = 27;
+            let lightIntensity = 100;
+            let ambientLight = 30;
+            let showRings = true;
+            let showMoons = true;
+            let showClouds = true;
+            let isPaused = false;
+            
+            // Colors
+            let saturnColor = p.color(210, 180, 140);
+            let ringColor = p.color(200, 200, 220, 150);
+            let cloudColor = p.color(230, 220, 200, 50);
+            
+            // UI elements
+            let rotationSpeedSlider, zoomSlider, tiltSlider;
+            let lightIntensitySlider, ambientLightSlider;
+            let showRingsCheckbox, showMoonsCheckbox, showCloudsCheckbox;
+            let resetBtn, randomizeBtn, pauseBtn, toggleControlsBtn;
+            
+            p.setup = () => {
+                let canvas = p.createCanvas(p.windowWidth, p.windowHeight * 0.8, p.WEBGL);
+                canvas.parent('canvas-container');
+                
+                // Initialize moons
+                for (let i = 0; i < moonCount; i++) {
+                    let distance = p.random(150, 300);
+                    let size = p.random(5, 15);
+                    let speed = p.random(0.002, 0.008);
+                    let angle = p.random(p.TWO_PI);
+                    let color = p.color(
+                        p.random(180, 220),
+                        p.random(180, 220),
+                        p.random(180, 220)
+                    );
+                    
+                    moons.push({
+                        distance: distance,
+                        size: size,
+                        speed: speed,
+                        angle: angle,
+                        color: color,
+                        orbitTilt: p.random(-0.2, 0.2)
+                    });
+                }
+                
+                // Setup UI controls
+                setupControls();
+                
+                // Set initial camera position
+                p.camera(0, 0, zoom, 0, 0, 0, 0, 1, 0);
+            };
+            
+            p.draw = () => {
+                if (isPaused) return;
+                
+                // Update parameters from UI
+                updateParameters();
+                
+                // Set background with stars
+                p.background(0);
+                drawStars();
+                
+                // Set lighting
+                p.ambientLight(ambientLight);
+                p.pointLight(255, 255, 255, -200, -100, 200);
+                p.directionalLight(
+                    lightIntensity, lightIntensity, lightIntensity,
+                    -1, -0.5, -1
+                );
+                
+                // Rotate the entire system
+                p.rotateY(rotationAngle);
+                rotationAngle += rotationSpeed;
+                
+                // Tilt the system
+                p.rotateX(p.radians(tilt));
+                
+                // Draw Saturn
+                drawSaturn();
+                
+                // Draw rings if enabled
+                if (showRings) {
+                    drawRings();
+                }
+                
+                // Draw moons if enabled
+                if (showMoons) {
+                    drawMoons();
+                }
+                
+                // Update UI values
+                updateUIValues();
+            };
+            
+            function drawStars() {
+                p.push();
+                p.translate(-p.width/2, -p.height/2);
+                p.fill(255);
+                p.noStroke();
+                for (let i = 0; i < 200; i++) {
+                    let x = p.random(p.width);
+                    let y = p.random(p.height);
+                    let size = p.random(1, 3);
+                    p.ellipse(x, y, size, size);
+                }
+                p.pop();
+            }
+            
+            function drawSaturn() {
+                // Main planet body
+                p.push();
+                p.noStroke();
+                p.specularMaterial(saturnColor);
+                p.sphere(saturnRadius);
+                
+                // Cloud bands if enabled
+                if (showClouds) {
+                    p.rotateY(rotationAngle * 0.8);
+                    for (let i = 0; i < 10; i++) {
+                        let lat = p.map(i, 0, 9, -p.HALF_PI, p.HALF_PI);
+                        let width = p.map(p.abs(lat), 0, p.HALF_PI, saturnRadius * 0.2, saturnRadius * 0.05);
+                        let radius = saturnRadius * p.cos(lat);
+                        
+                        p.push();
+                        p.rotateY(p.PI/2);
+                        p.rotateZ(lat);
+                        p.translate(0, 0, 0);
+                        p.fill(cloudColor);
+                        p.torus(radius, width, 24, 16);
+                        p.pop();
+                    }
+                }
+                p.pop();
+            }
+            
+            function drawRings() {
+                p.push();
+                p.rotateX(p.HALF_PI);
+                p.noStroke();
+                
+                // Draw multiple rings with varying opacity
+                for (let r = ringInnerRadius; r < ringOuterRadius; r += 5) {
+                    let opacity = p.map(r, ringInnerRadius, ringOuterRadius, 200, 50);
+                    let ringColorWithAlpha = p.color(
+                        p.red(ringColor),
+                        p.green(ringColor),
+                        p.blue(ringColor),
+                        opacity
+                    );
+                    
+                    p.fill(ringColorWithAlpha);
+                    p.torus(r, 2, 24, 64);
+                    
+                    // Add Cassini Division (gap in rings)
+                    if (r > 80 && r < 90) {
+                        continue;
+                    }
+                }
+                p.pop();
+            }
+            
+            function drawMoons() {
+                p.push();
+                for (let moon of moons) {
+                    p.push();
+                    // Position moon in orbit
+                    moon.angle += moon.speed;
+                    let x = moon.distance * p.cos(moon.angle);
+                    let z = moon.distance * p.sin(moon.angle);
+                    let y = moon.distance * moon.orbitTilt * p.sin(moon.angle * 2);
+                    
+                    p.translate(x, y, z);
+                    p.noStroke();
+                    p.specularMaterial(moon.color);
+                    p.sphere(moon.size);
+                    p.pop();
+                }
+                p.pop();
+            }
+            
+            function setupControls() {
+                // Sliders
+                rotationSpeedSlider = p.select('#rotation-speed');
+                zoomSlider = p.select('#zoom');
+                tiltSlider = p.select('#tilt');
+                lightIntensitySlider = p.select('#light-intensity');
+                ambientLightSlider = p.select('#ambient-light');
+                
+                // Checkboxes
+                showRingsCheckbox = p.select('#show-rings');
+                showMoonsCheckbox = p.select('#show-moons');
+                showCloudsCheckbox = p.select('#show-clouds');
+                
+                // Buttons
+                resetBtn = p.select('#reset');
+                randomizeBtn = p.select('#randomize');
+                pauseBtn = p.select('#pause');
+                toggleControlsBtn = p.select('#toggle-controls');
+                
+                // Event listeners
+                resetBtn.mousePressed(resetSystem);
+                randomizeBtn.mousePressed(randomizeSystem);
+                pauseBtn.mousePressed(togglePause);
+                toggleControlsBtn.mousePressed(toggleControlsVisibility);
+            }
+            
+            function updateParameters() {
+                rotationSpeed = parseFloat(rotationSpeedSlider.value());
+                zoom = parseFloat(zoomSlider.value());
+                tilt = parseFloat(tiltSlider.value());
+                lightIntensity = parseFloat(lightIntensitySlider.value());
+                ambientLight = parseFloat(ambientLightSlider.value());
+                showRings = showRingsCheckbox.checked();
+                showMoons = showMoonsCheckbox.checked();
+                showClouds = showCloudsCheckbox.checked();
+                
+                // Update camera based on zoom
+                p.camera(0, 0, zoom, 0, 0, 0, 0, 1, 0);
+            }
+            
+            function updateUIValues() {
+                p.select('#rotation-speed-value').html(rotationSpeed.toFixed(3));
+                p.select('#zoom-value').html(zoom);
+                p.select('#tilt-value').html(tilt + '°');
+                p.select('#light-intensity-value').html(lightIntensity);
+                p.select('#ambient-light-value').html(ambientLight);
+            }
+            
+            function resetSystem() {
+                rotationSpeedSlider.value(0.005);
+                zoomSlider.value(300);
+                tiltSlider.value(27);
+                lightIntensitySlider.value(100);
+                ambientLightSlider.value(30);
+                showRingsCheckbox.checked(true);
+                showMoonsCheckbox.checked(true);
+                showCloudsCheckbox.checked(true);
+                isPaused = false;
+                pauseBtn.html('Pause');
+            }
+            
+            function randomizeSystem() {
+                rotationSpeedSlider.value(p.random(0.001, 0.02));
+                zoomSlider.value(p.random(150, 500));
+                tiltSlider.value(p.random(-45, 45));
+                lightIntensitySlider.value(p.random(50, 200));
+                ambientLightSlider.value(p.random(0, 100));
+                
+                // Randomize moons
+                for (let moon of moons) {
+                    moon.distance = p.random(150, 300);
+                    moon.size = p.random(5, 15);
+                    moon.speed = p.random(0.002, 0.008);
+                    moon.orbitTilt = p.random(-0.2, 0.2);
+                    moon.color = p.color(
+                        p.random(180, 220),
+                        p.random(180, 220),
+                        p.random(180, 220)
+                    );
+                }
+            }
+            
+            function togglePause() {
+                isPaused = !isPaused;
+                pauseBtn.html(isPaused ? 'Play' : 'Pause');
+            }
+            
+            function toggleControlsVisibility() {
+                let controls = p.select('#controls');
+                controls.style('display') === 'none' ? 
+                    controls.style('display', 'block') : 
+                    controls.style('display', 'none');
+            }
+            
+            p.windowResized = () => {
+                p.resizeCanvas(p.windowWidth, p.windowHeight * 0.8);
+            };
+        };
+
+        new p5(sketch);
+    </script>
+
+</body></html>
